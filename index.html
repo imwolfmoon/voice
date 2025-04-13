@@ -8,9 +8,9 @@
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
 
   <div class="bg-white shadow-2xl rounded-2xl p-6 w-full max-w-md text-right">
-    <h2 class="text-2xl font-bold mb-4 text-purple-700">🎤 تبدیل گفتار به متن</h2>
-    <textarea id="output" rows="8" class="w-full p-3 border border-purple-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="اینجا گفتار شما نمایش داده می‌شود..."></textarea>
-    <button id="startStopBtn" class="mt-4 w-full bg-purple-600 text-white py-2 rounded-xl text-lg hover:bg-purple-700 transition">
+    <h2 class="text-2xl font-bold mb-4 text-red-600">🎤 تبدیل گفتار به متن</h2>
+    <textarea id="output" rows="8" class="w-full p-3 border border-red-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-red-400" placeholder="اینجا گفتار شما نمایش داده می‌شود..."></textarea>
+    <button id="startStopBtn" class="mt-4 w-full bg-red-600 text-white py-2 rounded-xl text-lg hover:bg-red-700 transition">
       🎙️ شروع گفتار
     </button>
   </div>
@@ -22,24 +22,31 @@
     let recognition;
     let recognizing = false;
 
-    // بررسی پشتیبانی مرورگر
     if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognition = new SpeechRecognition();
-      recognition.lang = "fa-IR"; // زبان فارسی
+      recognition.lang = "fa-IR";
       recognition.continuous = true;
-      recognition.interimResults = true;
+      recognition.interimResults = false; // فقط نتایج نهایی
 
       recognition.onresult = (event) => {
         let transcript = "";
         for (let i = event.resultIndex; i < event.results.length; ++i) {
-          transcript += event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            transcript += event.results[i][0].transcript + " ";
+          }
         }
-        output.value = transcript;
+        output.value += transcript;
       };
 
       recognition.onerror = (event) => {
-        console.error("خطا در تشخیص گفتار:", event.error);
+        console.error("خطا:", event.error);
+      };
+
+      recognition.onend = () => {
+        if (recognizing) {
+          recognition.start(); // اجرای دوباره برای مداومت
+        }
       };
 
       startStopBtn.addEventListener("click", () => {
@@ -54,8 +61,8 @@
       });
 
     } else {
+      alert("مرورگر شما از گفتار به متن پشتیبانی نمی‌کند.");
       startStopBtn.disabled = true;
-      alert("مرورگر شما از قابلیت تشخیص گفتار پشتیبانی نمی‌کند.");
     }
   </script>
 
