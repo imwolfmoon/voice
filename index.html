@@ -2,17 +2,16 @@
 <html lang="fa" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  
   <title>تبدیل گفتار به متن</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
 
-  <div class="bg-white shadow-xl rounded-2xl p-6 w-full max-w-md text-right">
-    <h2 class="text-2xl font-bold mb-4">🎤 تبدیل گفتار به متن</h2>
-    <textarea id="output" rows="8" class="w-full p-3 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="اینجا گفتار شما نمایش داده می‌شود..."></textarea>
-    <button id="startStopBtn" class="mt-4 w-full bg-blue-600 text-white py-2 rounded-xl text-lg hover:bg-blue-700 transition">
-      شروع گفتار
+  <div class="bg-white shadow-2xl rounded-2xl p-6 w-full max-w-md text-right">
+    <h2 class="text-2xl font-bold mb-4 text-purple-700">🎤 تبدیل گفتار به متن</h2>
+    <textarea id="output" rows="8" class="w-full p-3 border border-purple-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="اینجا گفتار شما نمایش داده می‌شود..."></textarea>
+    <button id="startStopBtn" class="mt-4 w-full bg-purple-600 text-white py-2 rounded-xl text-lg hover:bg-purple-700 transition">
+      🎙️ شروع گفتار
     </button>
   </div>
 
@@ -20,16 +19,18 @@
     const startStopBtn = document.getElementById("startStopBtn");
     const output = document.getElementById("output");
 
-    let recognizing = false;
     let recognition;
+    let recognizing = false;
 
-    if ('webkitSpeechRecognition' in window) {
-      recognition = new webkitSpeechRecognition(); // Chrome
+    // بررسی پشتیبانی مرورگر
+    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
       recognition.lang = "fa-IR"; // زبان فارسی
       recognition.continuous = true;
       recognition.interimResults = true;
 
-      recognition.onresult = function(event) {
+      recognition.onresult = (event) => {
         let transcript = "";
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           transcript += event.results[i][0].transcript;
@@ -37,23 +38,24 @@
         output.value = transcript;
       };
 
-      recognition.onerror = function(event) {
-        console.error("Speech recognition error:", event.error);
+      recognition.onerror = (event) => {
+        console.error("خطا در تشخیص گفتار:", event.error);
       };
 
       startStopBtn.addEventListener("click", () => {
         if (recognizing) {
           recognition.stop();
-          startStopBtn.textContent = "شروع گفتار";
+          startStopBtn.textContent = "🎙️ شروع گفتار";
         } else {
           recognition.start();
-          startStopBtn.textContent = "توقف گفتار";
+          startStopBtn.textContent = "⏹️ توقف گفتار";
         }
         recognizing = !recognizing;
       });
+
     } else {
-      alert("مرورگر شما از تشخیص گفتار پشتیبانی نمی‌کند.");
       startStopBtn.disabled = true;
+      alert("مرورگر شما از قابلیت تشخیص گفتار پشتیبانی نمی‌کند.");
     }
   </script>
 
