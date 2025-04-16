@@ -179,6 +179,12 @@
       background: #316AC5;
       color: white;
     }
+    
+    .permission-denied {
+      color: red;
+      font-size: 12px;
+      margin-top: 5px;
+    }
   </style>
 </head>
 <body class="bg-gray-300 flex items-center justify-center min-h-screen p-4">
@@ -297,7 +303,7 @@
           <div class="dropdown-item" onclick="toggleWordWrap()">
             <span>پوشش خط</span>
           </div>
-          <div class="dropdown-item" onclick="changeFont()">
+          <div class="dropdown-item" onclick="showFontDialog()">
             <span>فونت...</span>
           </div>
           <div class="dropdown-separator"></div>
@@ -415,6 +421,10 @@
         <i class="fas fa-highlighter"></i>
       </button>
       <div class="tool-separator"></div>
+      <button class="tool-button" title="فونت" onclick="showFontDialog()">
+        <i class="fas fa-text-height"></i>
+      </button>
+      <div class="tool-separator"></div>
       <button class="tool-button" title="زمان/تاریخ (F5)" onclick="timeDate()">
         <i class="far fa-clock"></i>
       </button>
@@ -463,6 +473,7 @@
         <i class="fas fa-microphone mr-1"></i>شروع گفتار
       </button>
       <span id="speech-status" class="text-sm text-gray-600">آماده</span>
+      <div id="permission-denied" class="permission-denied hidden">دسترسی به میکروفون داده نشد. لطفاً تنظیمات مرورگر خود را بررسی کنید.</div>
     </div>
   </div>
 
@@ -498,6 +509,55 @@
       </div>
       <div class="mt-4 flex justify-end">
         <button onclick="document.getElementById('color-picker-modal').classList.add('hidden')" class="bg-gray-300 px-4 py-1 rounded">انصراف</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Font Dialog Modal -->
+  <div id="font-dialog-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3 class="font-bold mb-4">انتخاب فونت</h3>
+      <div class="mb-4">
+        <label class="block mb-2">نام فونت:</label>
+        <select id="font-family-select" class="border p-1 w-full">
+          <option value="'Segoe UI', Tahoma, sans-serif">Segoe UI (پیش‌فرض)</option>
+          <option value="Arial, sans-serif">Arial</option>
+          <option value="'Times New Roman', serif">Times New Roman</option>
+          <option value="'Courier New', monospace">Courier New</option>
+          <option value="'B Nazanin', sans-serif">B Nazanin</option>
+          <option value="'B Titr', sans-serif">B Titr</option>
+          <option value="'B Yekan', sans-serif">B Yekan</option>
+          <option value="'B Mitra', sans-serif">B Mitra</option>
+        </select>
+      </div>
+      <div class="mb-4">
+        <label class="block mb-2">اندازه فونت:</label>
+        <select id="font-size-select" class="border p-1 w-full">
+          <option value="8px">8px</option>
+          <option value="9px">9px</option>
+          <option value="10px">10px</option>
+          <option value="11px">11px</option>
+          <option value="12px">12px</option>
+          <option value="13px" selected>13px</option>
+          <option value="14px">14px</option>
+          <option value="16px">16px</option>
+          <option value="18px">18px</option>
+          <option value="20px">20px</option>
+          <option value="24px">24px</option>
+        </select>
+      </div>
+      <div class="mb-4">
+        <label class="block mb-2">سبک فونت:</label>
+        <select id="font-style-select" class="border p-1 w-full">
+          <option value="normal">معمولی</option>
+          <option value="italic">ایتالیک</option>
+          <option value="bold">پررنگ</option>
+          <option value="bold italic">پررنگ و ایتالیک</option>
+        </select>
+      </div>
+      <div class="flex justify-end">
+        <button onclick="applyFontChanges()" class="bg-blue-500 text-white px-4 py-1 rounded">اعمال</button>
+        <button onclick="document.getElementById('font-dialog-modal').classList.add('hidden')" class="bg-gray-300 px-4 py-1 rounded ml-2">انصراف</button>
       </div>
     </div>
   </div>
@@ -871,11 +931,42 @@
       textarea.wrap = textarea.wrap === 'off' ? 'soft' : 'off';
     }
     
-    function changeFont() {
-      const font = prompt("نام فونت را وارد کنید:", "Tahoma");
-      if (font) {
-        document.getElementById('text-area').style.fontFamily = font;
+    function showFontDialog() {
+      const textarea = document.getElementById('text-area');
+      const style = window.getComputedStyle(textarea);
+      
+      // Set current values in the dialog
+      document.getElementById('font-family-select').value = style.fontFamily;
+      document.getElementById('font-size-select').value = style.fontSize;
+      document.getElementById('font-style-select').value = style.fontStyle === 'italic' ? 
+        (style.fontWeight === 'bold' ? 'bold italic' : 'italic') :
+        (style.fontWeight === 'bold' ? 'bold' : 'normal');
+      
+      document.getElementById('font-dialog-modal').classList.remove('hidden');
+    }
+    
+    function applyFontChanges() {
+      const textarea = document.getElementById('text-area');
+      const fontFamily = document.getElementById('font-family-select').value;
+      const fontSize = document.getElementById('font-size-select').value;
+      const fontStyle = document.getElementById('font-style-select').value;
+      
+      textarea.style.fontFamily = fontFamily;
+      textarea.style.fontSize = fontSize;
+      
+      if (fontStyle.includes('bold')) {
+        textarea.style.fontWeight = 'bold';
+      } else {
+        textarea.style.fontWeight = 'normal';
       }
+      
+      if (fontStyle.includes('italic')) {
+        textarea.style.fontStyle = 'italic';
+      } else {
+        textarea.style.fontStyle = 'normal';
+      }
+      
+      document.getElementById('font-dialog-modal').classList.add('hidden');
     }
     
     let currentColorType = 'text';
@@ -1050,6 +1141,7 @@
     const textArea = document.getElementById("text-area");
     const speechUI = document.getElementById("speech-ui");
     const speechBtn = document.getElementById("speech-btn");
+    const permissionDenied = document.getElementById("permission-denied");
     
     let recognition;
     let recognizing = false;
@@ -1064,18 +1156,31 @@
       if (!recognition) {
         recognition = createRecognition(languageSelect.value);
         
-        startStopBtn.addEventListener("click", () => {
+        startStopBtn.addEventListener("click", async () => {
           if (recognizing) {
             recognition.stop();
             recognizing = false;
             startStopBtn.innerHTML = '<i class="fas fa-microphone mr-1"></i>شروع گفتار';
             speechStatus.textContent = "متوقف شد";
-          } else {
+            permissionDenied.classList.add('hidden');
+            return;
+          }
+          
+          try {
+            // Request microphone permission
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            stream.getTracks().forEach(track => track.stop());
+            
             recognition = createRecognition(languageSelect.value);
             recognition.start();
             recognizing = true;
             startStopBtn.innerHTML = '<i class="fas fa-stop mr-1"></i>توقف گفتار';
             speechStatus.textContent = "در حال گوش دادن...";
+            permissionDenied.classList.add('hidden');
+          } catch (err) {
+            console.error("خطا در دسترسی به میکروفون:", err);
+            speechStatus.textContent = "خطا در دسترسی به میکروفون";
+            permissionDenied.classList.remove('hidden');
           }
         });
       }
@@ -1105,6 +1210,10 @@
       r.onerror = (event) => {
         console.error("خطا:", event.error);
         speechStatus.textContent = "خطا: " + event.error;
+        
+        if (event.error === 'not-allowed' || event.error === 'permission-denied') {
+          permissionDenied.classList.remove('hidden');
+        }
       };
       
       r.onend = () => {
