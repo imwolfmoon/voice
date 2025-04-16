@@ -2,88 +2,109 @@
 <html lang="fa" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>تبدیل گفتار به متن چندزبانه</title>
+  <title>گفتار به متن در TinyMCE</title>
+  <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
 
-  <div class="bg-white shadow-2xl rounded-2xl p-6 w-full max-w-md text-right">
-    <h2 class="text-2xl font-bold mb-4 text-red-600">🎤 تبدیل گفتار به متن</h2>
-
-    <label for="language" class="block text-gray-700 mb-2 font-semibold">انتخاب زبان:</label>
-    <select id="language" class="w-full p-2 border border-red-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-red-400">
-      <option value="fa-IR">فارسی</option>
-      <option value="en-US">انگلیسی</option>
-      <option value="ar-SA">عربی</option>
-      <option value="tr-TR">ترکی استانبولی</option>
-      <option value="fr-FR">فرانسوی</option>
-    </select>
-
-    <textarea id="output" rows="8" class="w-full p-3 border border-red-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-red-400" placeholder="اینجا گفتار شما نمایش داده می‌شود..."></textarea>
-    
-    <button id="startStopBtn" class="mt-4 w-full bg-red-600 text-white py-2 rounded-xl text-lg hover:bg-red-700 transition">
-      🎙️ شروع گفتار
-    </button>
-  </div>
+  <textarea id="editor">متن خود را اینجا بنویسید...</textarea>
 
   <script>
-    const startStopBtn = document.getElementById("startStopBtn");
-    const output = document.getElementById("output");
-    const languageSelect = document.getElementById("language");
+    tinymce.init({
+      selector: '#editor',
+      directionality: 'rtl',
+      language: 'fa',
+      height: 500,
+      menubar: false,
+      plugins: 'code',
+      toolbar: 'undo redo | bold italic underline | speech | code',
 
-    let recognition;
-    let recognizing = false;
+      setup: function (editor) {
+        editor.ui.registry.addButton('speech', {
+          text: '🎤 گفتار',
+          onAction: function () {
+            // ساخت پنجره انتخاب زبان و دکمه استارت
+            const dialog = document.createElement('div');
+            dialog.className = "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50";
 
-    function createRecognition(lang) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const r = new SpeechRecognition();
-      r.lang = lang;
-      r.continuous = true;
-      r.interimResults = false;
+            dialog.innerHTML = `
+              <div class="bg-white p-6 rounded-xl shadow-xl w-full max-w-md text-right">
+                <h2 class="text-xl font-bold text-red-600 mb-4">🎙️ تبدیل گفتار به متن</h2>
+                <label class="block font-semibold mb-2">انتخاب زبان:</label>
+                <select id="speechLang" class="w-full mb-4 p-2 border border-gray-300 rounded">
+                  <option value="fa-IR">فارسی</option>
+                  <option value="en-US">انگلیسی</option>
+                  <option value="ar-SA">عربی</option>
+                  <option value="tr-TR">ترکی استانبولی</option>
+                  <option value="fr-FR">فرانسوی</option>
+                </select>
+                <div class="flex justify-between mt-4">
+                  <button id="startSpeech" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">🎙️ شروع</button>
+                  <button id="closeSpeech" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">بستن</button>
+                </div>
+              </div>
+            `;
+            document.body.appendChild(dialog);
 
-      r.onresult = (event) => {
-        let transcript = "";
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            transcript += event.results[i][0].transcript + " ";
+            let recognition;
+            let recognizing = false;
+
+            function createRecognition(lang) {
+              const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+              const r = new SpeechRecognition();
+              r.lang = lang;
+              r.continuous = true;
+              r.interimResults = false;
+
+              r.onresult = (event) => {
+                let transcript = "";
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                  if (event.results[i].isFinal) {
+                    transcript += event.results[i][0].transcript + " ";
+                  }
+                }
+                editor.insertContent(transcript);
+              };
+
+              r.onerror = (event) => {
+                console.error("خطا:", event.error);
+              };
+
+              r.onend = () => {
+                if (recognizing) r.start();
+              };
+
+              return r;
+            }
+
+            document.getElementById("startSpeech").addEventListener("click", () => {
+              const lang = document.getElementById("speechLang").value;
+
+              if (!recognition) recognition = createRecognition(lang);
+
+              if (recognizing) {
+                recognition.stop();
+                recognizing = false;
+                document.getElementById("startSpeech").textContent = "🎙️ شروع";
+              } else {
+                recognition = createRecognition(lang); // با زبان جدید
+                recognition.start();
+                recognizing = true;
+                document.getElementById("startSpeech").textContent = "⏹️ توقف";
+              }
+            });
+
+            document.getElementById("closeSpeech").addEventListener("click", () => {
+              if (recognizing && recognition) {
+                recognition.stop();
+              }
+              dialog.remove();
+            });
           }
-        }
-        output.value += transcript;
-      };
-
-      r.onerror = (event) => {
-        console.error("خطا:", event.error);
-      };
-
-      r.onend = () => {
-        if (recognizing) {
-          r.start(); // ادامه گوش دادن
-        }
-      };
-
-      return r;
-    }
-
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-      recognition = createRecognition(languageSelect.value);
-
-      startStopBtn.addEventListener("click", () => {
-        if (recognizing) {
-          recognition.stop();
-          startStopBtn.textContent = "🎙️ شروع گفتار";
-        } else {
-          recognition = createRecognition(languageSelect.value); // با زبان جدید
-          recognition.start();
-          startStopBtn.textContent = "⏹️ توقف گفتار";
-        }
-        recognizing = !recognizing;
-      });
-
-    } else {
-      alert("مرورگر شما از گفتار به متن پشتیبانی نمی‌کند.");
-      startStopBtn.disabled = true;
-    }
+        });
+      }
+    });
   </script>
-
 </body>
 </html>
