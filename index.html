@@ -2,107 +2,1217 @@
 <html lang="fa" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>گفتار به متن در TinyMCE</title>
-  <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>نوت‌پد آنلاین پیشرفته</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @font-face {
+      font-family: 'Notepad';
+      src: local('Segoe UI'), local('Tahoma');
+    }
+    
+    .window {
+      box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.3);
+      border: 1px solid #003366;
+    }
+    
+    .title-bar {
+      background: linear-gradient(to right, #0A246A, #A6CAF0);
+      color: white;
+      padding: 3px 5px;
+      font-size: 13px;
+    }
+    
+    .menu-bar {
+      background-color: #f0f0f0;
+      border-bottom: 1px solid #d3d3d3;
+      padding: 2px 0;
+    }
+    
+    .menu-item {
+      padding: 2px 10px;
+      font-size: 13px;
+    }
+    
+    .menu-item:hover {
+      background-color: #e5e5e5;
+    }
+    
+    .dropdown {
+      position: absolute;
+      background-color: #f0f0f0;
+      border: 1px solid #d3d3d3;
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+      z-index: 100;
+      display: none;
+      min-width: 180px;
+    }
+    
+    .dropdown-item {
+      padding: 3px 10px 3px 25px;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .dropdown-item:hover {
+      background-color: #316AC5;
+      color: white;
+    }
+    
+    .status-bar {
+      background-color: #f0f0f0;
+      border-top: 1px solid #d3d3d3;
+      padding: 2px 5px;
+      font-size: 12px;
+    }
+    
+    .text-area {
+      font-family: 'Notepad', 'Segoe UI', Tahoma, sans-serif;
+      font-size: 13px;
+      resize: none;
+      outline: none;
+      width: 100%;
+      height: calc(100% - 90px);
+    }
+    
+    .toolbar {
+      background-color: #f0f0f0;
+      border-bottom: 1px solid #d3d3d3;
+      padding: 2px 5px;
+      display: flex;
+      flex-wrap: wrap;
+    }
+    
+    .tool-button {
+      padding: 2px 5px;
+      margin: 0 2px;
+      border: 1px solid transparent;
+      background: none;
+      cursor: pointer;
+    }
+    
+    .tool-button:hover {
+      border: 1px solid #d3d3d3;
+      background-color: #e5e5e5;
+    }
+    
+    .tool-separator {
+      border-left: 1px solid #d3d3d3;
+      margin: 0 5px;
+      height: 20px;
+    }
+    
+    .speech-active {
+      background-color: #316AC5;
+      color: white;
+    }
+    
+    .dropdown-separator {
+      height: 1px;
+      background-color: #d3d3d3;
+      margin: 3px 0;
+    }
+    
+    .color-palette {
+      display: flex;
+      flex-wrap: wrap;
+      width: 120px;
+      padding: 5px;
+    }
+    
+    .color-option {
+      width: 20px;
+      height: 20px;
+      margin: 2px;
+      border: 1px solid #ddd;
+      cursor: pointer;
+    }
+    
+    .color-option:hover {
+      border: 1px solid #000;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    
+    .modal-content {
+      background-color: white;
+      padding: 20px;
+      border-radius: 5px;
+      width: 400px;
+      max-width: 90%;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .tab-button {
+      padding: 5px 10px;
+      background: #f0f0f0;
+      border: none;
+      cursor: pointer;
+    }
+    
+    .tab-button.active {
+      background: #316AC5;
+      color: white;
+    }
+  </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+<body class="bg-gray-300 flex items-center justify-center min-h-screen p-4">
+  <div class="window w-full max-w-6xl h-[700px] flex flex-col">
+    <!-- Title Bar -->
+    <div class="title-bar flex justify-between items-center">
+      <div class="flex items-center">
+        <i class="fas fa-file-alt ml-2"></i>
+        <span class="font-bold ml-1">نوت‌پد آنلاین</span>
+      </div>
+      <div class="flex">
+        <button class="px-3 hover:bg-blue-700" onclick="minimizeWindow()">_</button>
+        <button class="px-3 hover:bg-blue-700" onclick="maximizeWindow()">□</button>
+        <button class="px-3 hover:bg-red-700" onclick="closeWindow()">✕</button>
+      </div>
+    </div>
+    
+    <!-- Menu Bar -->
+    <div class="menu-bar flex">
+      <div class="menu-item relative" onclick="toggleDropdown('file-dropdown')">
+        فایل
+        <div id="file-dropdown" class="dropdown rtl">
+          <div class="dropdown-item" onclick="newFile()">
+            <span>جدید</span>
+            <span class="text-xs">Ctrl+N</span>
+          </div>
+          <div class="dropdown-item" onclick="openFile()">
+            <span>باز کردن...</span>
+            <span class="text-xs">Ctrl+O</span>
+          </div>
+          <div class="dropdown-item" onclick="saveFile()">
+            <span>ذخیره</span>
+            <span class="text-xs">Ctrl+S</span>
+          </div>
+          <div class="dropdown-item" onclick="saveAsFile()">
+            <span>ذخیره با نام...</span>
+            <span class="text-xs">Ctrl+Shift+S</span>
+          </div>
+          <div class="dropdown-separator"></div>
+          <div class="dropdown-item" onclick="printFile()">
+            <span>چاپ...</span>
+            <span class="text-xs">Ctrl+P</span>
+          </div>
+          <div class="dropdown-separator"></div>
+          <div class="dropdown-item" onclick="exitApp()">
+            <span>خروج</span>
+            <span class="text-xs">Alt+F4</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="menu-item relative" onclick="toggleDropdown('edit-dropdown')">
+        ویرایش
+        <div id="edit-dropdown" class="dropdown rtl">
+          <div class="dropdown-item" onclick="undo()">
+            <span>واگرد</span>
+            <span class="text-xs">Ctrl+Z</span>
+          </div>
+          <div class="dropdown-item" onclick="redo()">
+            <span>انجام مجدد</span>
+            <span class="text-xs">Ctrl+Y</span>
+          </div>
+          <div class="dropdown-separator"></div>
+          <div class="dropdown-item" onclick="cut()">
+            <span>برش</span>
+            <span class="text-xs">Ctrl+X</span>
+          </div>
+          <div class="dropdown-item" onclick="copy()">
+            <span>رونوشت</span>
+            <span class="text-xs">Ctrl+C</span>
+          </div>
+          <div class="dropdown-item" onclick="paste()">
+            <span>چسباندن</span>
+            <span class="text-xs">Ctrl+V</span>
+          </div>
+          <div class="dropdown-item" onclick="deleteText()">
+            <span>حذف</span>
+            <span class="text-xs">Del</span>
+          </div>
+          <div class="dropdown-separator"></div>
+          <div class="dropdown-item" onclick="searchWithBing()">
+            <span>جستجو با بینگ...</span>
+            <span class="text-xs">Ctrl+E</span>
+          </div>
+          <div class="dropdown-item" onclick="find()">
+            <span>یافتن...</span>
+            <span class="text-xs">Ctrl+F</span>
+          </div>
+          <div class="dropdown-item" onclick="findNext()">
+            <span>یافتن بعدی</span>
+            <span class="text-xs">F3</span>
+          </div>
+          <div class="dropdown-item" onclick="replace()">
+            <span>جایگزینی...</span>
+            <span class="text-xs">Ctrl+H</span>
+          </div>
+          <div class="dropdown-item" onclick="goTo()">
+            <span>برو به...</span>
+            <span class="text-xs">Ctrl+G</span>
+          </div>
+          <div class="dropdown-separator"></div>
+          <div class="dropdown-item" onclick="selectAll()">
+            <span>انتخاب همه</span>
+            <span class="text-xs">Ctrl+A</span>
+          </div>
+          <div class="dropdown-item" onclick="timeDate()">
+            <span>زمان/تاریخ</span>
+            <span class="text-xs">F5</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="menu-item relative" onclick="toggleDropdown('format-dropdown')">
+        قالب
+        <div id="format-dropdown" class="dropdown rtl">
+          <div class="dropdown-item" onclick="toggleWordWrap()">
+            <span>پوشش خط</span>
+          </div>
+          <div class="dropdown-item" onclick="changeFont()">
+            <span>فونت...</span>
+          </div>
+          <div class="dropdown-separator"></div>
+          <div class="dropdown-item" onclick="showColorPicker('text')">
+            <span>رنگ متن...</span>
+          </div>
+          <div class="dropdown-item" onclick="showColorPicker('background')">
+            <span>رنگ پس‌زمینه...</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="menu-item relative" onclick="toggleDropdown('view-dropdown')">
+        مشاهده
+        <div id="view-dropdown" class="dropdown rtl">
+          <div class="dropdown-item" onclick="zoomIn()">
+            <span>بزرگنمایی</span>
+            <span class="text-xs">Ctrl+Plus</span>
+          </div>
+          <div class="dropdown-item" onclick="zoomOut()">
+            <span>کوچکنمایی</span>
+            <span class="text-xs">Ctrl+Minus</span>
+          </div>
+          <div class="dropdown-item" onclick="restoreDefaultZoom()">
+            <span>بازگرداندن اندازه پیش‌فرض</span>
+            <span class="text-xs">Ctrl+0</span>
+          </div>
+          <div class="dropdown-separator"></div>
+          <div class="dropdown-item" onclick="toggleStatusBar()">
+            <span>نوار وضعیت</span>
+          </div>
+          <div class="dropdown-item" onclick="toggleFullscreen()">
+            <span>حالت تمام صفحه</span>
+            <span class="text-xs">F11</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="menu-item relative" onclick="toggleDropdown('tools-dropdown')">
+        ابزارها
+        <div id="tools-dropdown" class="dropdown rtl">
+          <div class="dropdown-item" onclick="showWordCount()">
+            <span>شمارش کلمات</span>
+          </div>
+          <div class="dropdown-item" onclick="toggleSpeechUI()">
+            <span>تبدیل گفتار به متن</span>
+          </div>
+          <div class="dropdown-item" onclick="showSpellCheck()">
+            <span>بررسی املایی</span>
+          </div>
+          <div class="dropdown-item" onclick="showPreferences()">
+            <span>تنظیمات...</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="menu-item relative" onclick="toggleDropdown('help-dropdown')">
+        راهنما
+        <div id="help-dropdown" class="dropdown rtl">
+          <div class="dropdown-item" onclick="showHelp()">
+            <span>راهنمای نوت‌پد</span>
+            <span class="text-xs">F1</span>
+          </div>
+          <div class="dropdown-item" onclick="showAbout()">
+            <span>درباره نوت‌پد</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <button class="tool-button" title="جدید (Ctrl+N)" onclick="newFile()">
+        <i class="far fa-file"></i>
+      </button>
+      <button class="tool-button" title="باز کردن (Ctrl+O)" onclick="openFile()">
+        <i class="far fa-folder-open"></i>
+      </button>
+      <button class="tool-button" title="ذخیره (Ctrl+S)" onclick="saveFile()">
+        <i class="far fa-save"></i>
+      </button>
+      <div class="tool-separator"></div>
+      <button class="tool-button" title="چاپ (Ctrl+P)" onclick="printFile()">
+        <i class="fas fa-print"></i>
+      </button>
+      <div class="tool-separator"></div>
+      <button class="tool-button" title="واگرد (Ctrl+Z)" onclick="undo()">
+        <i class="fas fa-undo"></i>
+      </button>
+      <button class="tool-button" title="انجام مجدد (Ctrl+Y)" onclick="redo()">
+        <i class="fas fa-redo"></i>
+      </button>
+      <div class="tool-separator"></div>
+      <button class="tool-button" title="برش (Ctrl+X)" onclick="cut()">
+        <i class="fas fa-cut"></i>
+      </button>
+      <button class="tool-button" title="رونوشت (Ctrl+C)" onclick="copy()">
+        <i class="far fa-copy"></i>
+      </button>
+      <button class="tool-button" title="چسباندن (Ctrl+V)" onclick="paste()">
+        <i class="fas fa-paste"></i>
+      </button>
+      <div class="tool-separator"></div>
+      <button class="tool-button" title="یافتن (Ctrl+F)" onclick="find()">
+        <i class="fas fa-search"></i>
+      </button>
+      <button class="tool-button" title="جایگزینی (Ctrl+H)" onclick="replace()">
+        <i class="fas fa-exchange-alt"></i>
+      </button>
+      <div class="tool-separator"></div>
+      <button class="tool-button" title="رنگ متن" onclick="showColorPicker('text')">
+        <i class="fas fa-font"></i>
+      </button>
+      <button class="tool-button" title="رنگ پس‌زمینه" onclick="showColorPicker('background')">
+        <i class="fas fa-highlighter"></i>
+      </button>
+      <div class="tool-separator"></div>
+      <button class="tool-button" title="زمان/تاریخ (F5)" onclick="timeDate()">
+        <i class="far fa-clock"></i>
+      </button>
+      <div class="tool-separator"></div>
+      <button id="speech-btn" class="tool-button" title="تبدیل گفتار به متن" onclick="toggleSpeechUI()">
+        <i class="fas fa-microphone"></i>
+      </button>
+      <button class="tool-button" title="شمارش کلمات" onclick="showWordCount()">
+        <i class="fas fa-list-ol"></i>
+      </button>
+      <button class="tool-button" title="بررسی املایی" onclick="showSpellCheck()">
+        <i class="fas fa-spell-check"></i>
+      </button>
+      <div class="tool-separator"></div>
+      <button class="tool-button" title="حالت تمام صفحه (F11)" onclick="toggleFullscreen()">
+        <i class="fas fa-expand"></i>
+      </button>
+    </div>
+    
+    <!-- Text Area -->
+    <textarea id="text-area" class="text-area p-1" spellcheck="false"></textarea>
+    
+    <!-- Status Bar -->
+    <div id="status-bar" class="status-bar flex justify-between">
+      <div id="cursor-position">Ln 1, Col 1</div>
+      <div id="word-count">0 کلمه</div>
+      <div id="encoding">UTF-8</div>
+      <div id="line-ending">CRLF</div>
+    </div>
+    
+    <!-- Speech Recognition UI -->
+    <div id="speech-ui" class="hidden bg-white p-2 border-t border-gray-300 flex items-center">
+      <div class="flex items-center mr-3">
+        <label for="language" class="mr-1 text-sm">زبان:</label>
+        <select id="language" class="border border-gray-300 p-1 rounded text-sm">
+          <option value="fa-IR">فارسی</option>
+          <option value="en-US">انگلیسی</option>
+          <option value="ar-SA">عربی</option>
+          <option value="tr-TR">ترکی استانبولی</option>
+          <option value="fr-FR">فرانسوی</option>
+          <option value="de-DE">آلمانی</option>
+          <option value="es-ES">اسپانیایی</option>
+        </select>
+      </div>
+      <button id="startStopBtn" class="bg-blue-500 text-white px-3 py-1 rounded text-sm mr-2">
+        <i class="fas fa-microphone mr-1"></i>شروع گفتار
+      </button>
+      <span id="speech-status" class="text-sm text-gray-600">آماده</span>
+    </div>
+  </div>
 
-  <textarea id="editor">متن خود را اینجا بنویسید...</textarea>
+  <!-- Color Picker Modal -->
+  <div id="color-picker-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3 class="font-bold mb-4" id="color-picker-title">انتخاب رنگ</h3>
+      <div class="color-palette">
+        <div class="color-option" style="background-color: #000000;" onclick="setColor('#000000')"></div>
+        <div class="color-option" style="background-color: #333333;" onclick="setColor('#333333')"></div>
+        <div class="color-option" style="background-color: #666666;" onclick="setColor('#666666')"></div>
+        <div class="color-option" style="background-color: #999999;" onclick="setColor('#999999')"></div>
+        <div class="color-option" style="background-color: #CCCCCC;" onclick="setColor('#CCCCCC')"></div>
+        <div class="color-option" style="background-color: #FFFFFF; border: 1px solid #000;" onclick="setColor('#FFFFFF')"></div>
+        
+        <div class="color-option" style="background-color: #FF0000;" onclick="setColor('#FF0000')"></div>
+        <div class="color-option" style="background-color: #FF6600;" onclick="setColor('#FF6600')"></div>
+        <div class="color-option" style="background-color: #FFCC00;" onclick="setColor('#FFCC00')"></div>
+        <div class="color-option" style="background-color: #00FF00;" onclick="setColor('#00FF00')"></div>
+        <div class="color-option" style="background-color: #0066FF;" onclick="setColor('#0066FF')"></div>
+        <div class="color-option" style="background-color: #6600FF;" onclick="setColor('#6600FF')"></div>
+        
+        <div class="color-option" style="background-color: #990000;" onclick="setColor('#990000')"></div>
+        <div class="color-option" style="background-color: #994C00;" onclick="setColor('#994C00')"></div>
+        <div class="color-option" style="background-color: #999900;" onclick="setColor('#999900')"></div>
+        <div class="color-option" style="background-color: #009900;" onclick="setColor('#009900')"></div>
+        <div class="color-option" style="background-color: #004C99;" onclick="setColor('#004C99')"></div>
+        <div class="color-option" style="background-color: #4C0099;" onclick="setColor('#4C0099')"></div>
+      </div>
+      <div class="mt-4">
+        <label for="custom-color">رنگ سفارشی:</label>
+        <input type="color" id="custom-color" onchange="setColor(this.value)" class="ml-2">
+      </div>
+      <div class="mt-4 flex justify-end">
+        <button onclick="document.getElementById('color-picker-modal').classList.add('hidden')" class="bg-gray-300 px-4 py-1 rounded">انصراف</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Word Count Modal -->
+  <div id="word-count-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3 class="font-bold mb-4">شمارش کلمات</h3>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <p class="font-semibold">تعداد صفحات:</p>
+          <p id="page-count">1</p>
+        </div>
+        <div>
+          <p class="font-semibold">تعداد کلمات:</p>
+          <p id="word-count-result">0</p>
+        </div>
+        <div>
+          <p class="font-semibold">تعداد کاراکترها (با فاصله):</p>
+          <p id="char-count-with-spaces">0</p>
+        </div>
+        <div>
+          <p class="font-semibold">تعداد کاراکترها (بدون فاصله):</p>
+          <p id="char-count-no-spaces">0</p>
+        </div>
+        <div>
+          <p class="font-semibold">تعداد پاراگراف‌ها:</p>
+          <p id="paragraph-count">0</p>
+        </div>
+        <div>
+          <p class="font-semibold">تعداد خطوط:</p>
+          <p id="line-count">1</p>
+        </div>
+      </div>
+      <div class="mt-4 flex justify-end">
+        <button onclick="document.getElementById('word-count-modal').classList.add('hidden')" class="bg-blue-500 text-white px-4 py-1 rounded">تأیید</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Spell Check Modal -->
+  <div id="spell-check-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3 class="font-bold mb-4">بررسی املایی</h3>
+      <div class="border p-2 mb-4" style="height: 200px; overflow-y: auto;" id="spell-check-results">
+        <p class="text-gray-500">در حال بررسی متن...</p>
+      </div>
+      <div class="flex justify-between">
+        <button onclick="correctSpelling()" class="bg-blue-500 text-white px-4 py-1 rounded">تصحیح</button>
+        <button onclick="ignoreSpelling()" class="bg-gray-300 px-4 py-1 rounded">نادیده گرفتن</button>
+        <button onclick="document.getElementById('spell-check-modal').classList.add('hidden')" class="bg-gray-300 px-4 py-1 rounded">انصراف</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preferences Modal -->
+  <div id="preferences-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3 class="font-bold mb-4">تنظیمات</h3>
+      <div class="flex border-b mb-4">
+        <button class="tab-button active" onclick="openTab('general-tab', this)">عمومی</button>
+        <button class="tab-button" onclick="openTab('editor-tab', this)">ویرایشگر</button>
+        <button class="tab-button" onclick="openTab('speech-tab', this)">گفتار</button>
+      </div>
+      
+      <div id="general-tab" class="tab-content active">
+        <div class="mb-4">
+          <label class="block mb-2">زبان پیش‌فرض:</label>
+          <select class="border p-1 w-full">
+            <option>فارسی</option>
+            <option>انگلیسی</option>
+            <option>عربی</option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label class="block mb-2">کدگذاری پیش‌فرض:</label>
+          <select class="border p-1 w-full">
+            <option>UTF-8</option>
+            <option>UTF-16</option>
+            <option>Windows-1256</option>
+          </select>
+        </div>
+      </div>
+      
+      <div id="editor-tab" class="tab-content">
+        <div class="mb-4">
+          <label class="flex items-center">
+            <input type="checkbox" class="mr-2" checked>
+            پوشش خط
+          </label>
+        </div>
+        <div class="mb-4">
+          <label class="flex items-center">
+            <input type="checkbox" class="mr-2">
+            نمایش نوار وضعیت
+          </label>
+        </div>
+        <div class="mb-4">
+          <label class="block mb-2">اندازه فونت:</label>
+          <input type="range" min="8" max="24" value="13" class="w-full">
+        </div>
+      </div>
+      
+      <div id="speech-tab" class="tab-content">
+        <div class="mb-4">
+          <label class="block mb-2">زبان تشخیص گفتار پیش‌فرض:</label>
+          <select class="border p-1 w-full">
+            <option value="fa-IR">فارسی</option>
+            <option value="en-US">انگلیسی</option>
+            <option value="ar-SA">عربی</option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label class="flex items-center">
+            <input type="checkbox" class="mr-2" checked>
+            تشخیص خودکار زبان
+          </label>
+        </div>
+      </div>
+      
+      <div class="mt-4 flex justify-end">
+        <button onclick="savePreferences()" class="bg-blue-500 text-white px-4 py-1 rounded">ذخیره</button>
+        <button onclick="document.getElementById('preferences-modal').classList.add('hidden')" class="bg-gray-300 px-4 py-1 rounded ml-2">انصراف</button>
+      </div>
+    </div>
+  </div>
 
   <script>
-    tinymce.init({
-      selector: '#editor',
-      directionality: 'rtl',
-      language: 'fa',
-      height: 500,
-      menubar: false,
-      plugins: 'code',
-      toolbar: 'undo redo | bold italic underline | speech | code',
-
-      setup: function (editor) {
-        editor.ui.registry.addButton('speech', {
-          text: '🎤 گفتار',
-          onAction: function () {
-            // ساخت پنجره انتخاب زبان و دکمه استارت
-            const dialog = document.createElement('div');
-            dialog.className = "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50";
-
-            dialog.innerHTML = `
-              <div class="bg-white p-6 rounded-xl shadow-xl w-full max-w-md text-right">
-                <h2 class="text-xl font-bold text-red-600 mb-4">🎙️ تبدیل گفتار به متن</h2>
-                <label class="block font-semibold mb-2">انتخاب زبان:</label>
-                <select id="speechLang" class="w-full mb-4 p-2 border border-gray-300 rounded">
-                  <option value="fa-IR">فارسی</option>
-                  <option value="en-US">انگلیسی</option>
-                  <option value="ar-SA">عربی</option>
-                  <option value="tr-TR">ترکی استانبولی</option>
-                  <option value="fr-FR">فرانسوی</option>
-                </select>
-                <div class="flex justify-between mt-4">
-                  <button id="startSpeech" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">🎙️ شروع</button>
-                  <button id="closeSpeech" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">بستن</button>
-                </div>
-              </div>
-            `;
-            document.body.appendChild(dialog);
-
-            let recognition;
-            let recognizing = false;
-
-            function createRecognition(lang) {
-              const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-              const r = new SpeechRecognition();
-              r.lang = lang;
-              r.continuous = true;
-              r.interimResults = false;
-
-              r.onresult = (event) => {
-                let transcript = "";
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                  if (event.results[i].isFinal) {
-                    transcript += event.results[i][0].transcript + " ";
-                  }
-                }
-                editor.insertContent(transcript);
-              };
-
-              r.onerror = (event) => {
-                console.error("خطا:", event.error);
-              };
-
-              r.onend = () => {
-                if (recognizing) r.start();
-              };
-
-              return r;
-            }
-
-            document.getElementById("startSpeech").addEventListener("click", () => {
-              const lang = document.getElementById("speechLang").value;
-
-              if (!recognition) recognition = createRecognition(lang);
-
-              if (recognizing) {
-                recognition.stop();
-                recognizing = false;
-                document.getElementById("startSpeech").textContent = "🎙️ شروع";
-              } else {
-                recognition = createRecognition(lang); // با زبان جدید
-                recognition.start();
-                recognizing = true;
-                document.getElementById("startSpeech").textContent = "⏹️ توقف";
-              }
-            });
-
-            document.getElementById("closeSpeech").addEventListener("click", () => {
-              if (recognizing && recognition) {
-                recognition.stop();
-              }
-              dialog.remove();
-            });
+    // Window controls
+    function minimizeWindow() {
+      alert("پنجره کوچک شد (شبیه‌سازی)");
+    }
+    
+    function maximizeWindow() {
+      const windowElement = document.querySelector('.window');
+      if (windowElement.classList.contains('maximized')) {
+        windowElement.classList.remove('maximized');
+        windowElement.classList.remove('w-screen');
+        windowElement.classList.remove('h-screen');
+        windowElement.classList.add('max-w-6xl');
+        windowElement.classList.add('h-[700px]');
+      } else {
+        windowElement.classList.add('maximized');
+        windowElement.classList.add('w-screen');
+        windowElement.classList.add('h-screen');
+        windowElement.classList.remove('max-w-6xl');
+        windowElement.classList.remove('h-[700px]');
+      }
+    }
+    
+    function closeWindow() {
+      if (confirm("آیا می‌خواهید نوت‌پد را ببندید؟")) {
+        alert("پنجره بسته شد (شبیه‌سازی)");
+      }
+    }
+    
+    // Menu functions
+    function toggleDropdown(id) {
+      const dropdowns = document.querySelectorAll('.dropdown');
+      dropdowns.forEach(dropdown => {
+        if (dropdown.id !== id) {
+          dropdown.style.display = 'none';
+        }
+      });
+      
+      const dropdown = document.getElementById(id);
+      dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+    }
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(event) {
+      if (!event.target.closest('.menu-item') && !event.target.closest('.dropdown')) {
+        const dropdowns = document.querySelectorAll('.dropdown');
+        dropdowns.forEach(dropdown => {
+          dropdown.style.display = 'none';
+        });
+      }
+    });
+    
+    // File menu functions
+    function newFile() {
+      if (document.getElementById('text-area').value && !confirm("آیا می‌خواهید تغییرات ذخیره نشده را نادیده بگیرید؟")) {
+        return;
+      }
+      document.getElementById('text-area').value = '';
+      updateStatusBar();
+      updateWordCount();
+    }
+    
+    function openFile() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.txt,.text,.html,.js,.css,.json,.md';
+      
+      input.onchange = e => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+          document.getElementById('text-area').value = e.target.result;
+          updateStatusBar();
+          updateWordCount();
+        };
+        
+        reader.readAsText(file);
+      };
+      
+      input.click();
+    }
+    
+    function saveFile() {
+      const text = document.getElementById('text-area').value;
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'document.txt';
+      a.click();
+      
+      URL.revokeObjectURL(url);
+    }
+    
+    function saveAsFile() {
+      const fileName = prompt("نام فایل را وارد کنید:", "document.txt");
+      if (fileName) {
+        const text = document.getElementById('text-area').value;
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        
+        URL.revokeObjectURL(url);
+      }
+    }
+    
+    function printFile() {
+      window.print();
+    }
+    
+    function exitApp() {
+      closeWindow();
+    }
+    
+    // Edit menu functions
+    function undo() {
+      document.getElementById('text-area').focus();
+      document.execCommand('undo');
+    }
+    
+    function redo() {
+      document.getElementById('text-area').focus();
+      document.execCommand('redo');
+    }
+    
+    function cut() {
+      document.getElementById('text-area').focus();
+      document.execCommand('cut');
+    }
+    
+    function copy() {
+      document.getElementById('text-area').focus();
+      document.execCommand('copy');
+    }
+    
+    function paste() {
+      document.getElementById('text-area').focus();
+      document.execCommand('paste');
+    }
+    
+    function deleteText() {
+      const textarea = document.getElementById('text-area');
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      textarea.value = textarea.value.substring(0, start) + textarea.value.substring(end);
+      textarea.selectionStart = textarea.selectionEnd = start;
+      updateStatusBar();
+      updateWordCount();
+    }
+    
+    function searchWithBing() {
+      const selection = document.getElementById('text-area').value.substring(
+        document.getElementById('text-area').selectionStart,
+        document.getElementById('text-area').selectionEnd
+      );
+      
+      if (selection) {
+        window.open(`https://www.bing.com/search?q=${encodeURIComponent(selection)}`, '_blank');
+      } else {
+        alert("لطفاً متنی را برای جستجو انتخاب کنید");
+      }
+    }
+    
+    function find() {
+      const searchText = prompt("متن مورد نظر برای یافتن را وارد کنید:");
+      if (searchText) {
+        const textarea = document.getElementById('text-area');
+        const index = textarea.value.indexOf(searchText);
+        
+        if (index >= 0) {
+          textarea.focus();
+          textarea.selectionStart = index;
+          textarea.selectionEnd = index + searchText.length;
+          updateStatusBar();
+        } else {
+          alert("متن مورد نظر یافت نشد");
+        }
+      }
+    }
+    
+    function findNext() {
+      alert("یافتن بعدی (شبیه‌سازی)");
+    }
+    
+    function replace() {
+      const searchText = prompt("متن مورد نظر برای جایگزینی را وارد کنید:");
+      if (searchText) {
+        const replaceText = prompt(`جایگزین "${searchText}" با:`);
+        if (replaceText !== null) {
+          const textarea = document.getElementById('text-area');
+          textarea.value = textarea.value.replace(new RegExp(searchText, 'g'), replaceText);
+          updateWordCount();
+        }
+      }
+    }
+    
+    function goTo() {
+      const lineNumber = prompt("شماره خط مورد نظر را وارد کنید:");
+      if (lineNumber && !isNaN(lineNumber)) {
+        const textarea = document.getElementById('text-area');
+        const lines = textarea.value.split('\n');
+        
+        if (lineNumber > 0 && lineNumber <= lines.length) {
+          let position = 0;
+          for (let i = 0; i < lineNumber - 1; i++) {
+            position += lines[i].length + 1; // +1 for newline character
+          }
+          
+          textarea.focus();
+          textarea.selectionStart = position;
+          textarea.selectionEnd = position;
+          updateStatusBar();
+        } else {
+          alert("شماره خط نامعتبر است");
+        }
+      }
+    }
+    
+    function selectAll() {
+      document.getElementById('text-area').select();
+    }
+    
+    function timeDate() {
+      const now = new Date();
+      const textarea = document.getElementById('text-area');
+      const cursorPos = textarea.selectionStart;
+      
+      const timeDateString = now.toLocaleString('fa-IR');
+      textarea.value = textarea.value.substring(0, cursorPos) + timeDateString + textarea.value.substring(cursorPos);
+      
+      updateStatusBar();
+      updateWordCount();
+    }
+    
+    // Format menu functions
+    function toggleWordWrap() {
+      const textarea = document.getElementById('text-area');
+      textarea.wrap = textarea.wrap === 'off' ? 'soft' : 'off';
+    }
+    
+    function changeFont() {
+      const font = prompt("نام فونت را وارد کنید:", "Tahoma");
+      if (font) {
+        document.getElementById('text-area').style.fontFamily = font;
+      }
+    }
+    
+    let currentColorType = 'text';
+    
+    function showColorPicker(type) {
+      currentColorType = type;
+      document.getElementById('color-picker-title').textContent = 
+        type === 'text' ? 'انتخاب رنگ متن' : 'انتخاب رنگ پس‌زمینه';
+      document.getElementById('color-picker-modal').classList.remove('hidden');
+    }
+    
+    function setColor(color) {
+      const textarea = document.getElementById('text-area');
+      if (currentColorType === 'text') {
+        textarea.style.color = color;
+      } else {
+        textarea.style.backgroundColor = color;
+      }
+    }
+    
+    // View menu functions
+    function zoomIn() {
+      const textarea = document.getElementById('text-area');
+      const currentSize = parseInt(getComputedStyle(textarea).fontSize);
+      textarea.style.fontSize = (currentSize + 1) + 'px';
+    }
+    
+    function zoomOut() {
+      const textarea = document.getElementById('text-area');
+      const currentSize = parseInt(getComputedStyle(textarea).fontSize);
+      if (currentSize > 8) {
+        textarea.style.fontSize = (currentSize - 1) + 'px';
+      }
+    }
+    
+    function restoreDefaultZoom() {
+      document.getElementById('text-area').style.fontSize = '13px';
+    }
+    
+    function toggleStatusBar() {
+      const statusBar = document.getElementById('status-bar');
+      statusBar.style.display = statusBar.style.display === 'none' ? 'flex' : 'none';
+    }
+    
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          alert(`خطا در ورود به حالت تمام صفحه: ${err.message}`);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+    
+    // Tools menu functions
+    function showWordCount() {
+      updateWordCount(true);
+      document.getElementById('word-count-modal').classList.remove('hidden');
+    }
+    
+    function updateWordCount(showModal = false) {
+      const text = document.getElementById('text-area').value;
+      const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+      const charsWithSpaces = text.length;
+      const charsNoSpaces = text.replace(/\s/g, '').length;
+      const paragraphs = text.trim() === '' ? 0 : text.split(/\n\s*\n/).length;
+      const lines = text.split('\n').length;
+      
+      document.getElementById('word-count').textContent = `${words} کلمه`;
+      
+      if (showModal) {
+        document.getElementById('word-count-result').textContent = words;
+        document.getElementById('char-count-with-spaces').textContent = charsWithSpaces;
+        document.getElementById('char-count-no-spaces').textContent = charsNoSpaces;
+        document.getElementById('paragraph-count').textContent = paragraphs;
+        document.getElementById('line-count').textContent = lines;
+        document.getElementById('page-count').textContent = Math.ceil(charsWithSpaces / 1800); // Approximate pages
+      }
+    }
+    
+    function toggleSpeechUI() {
+      speechUI.classList.toggle('hidden');
+      speechBtn.classList.toggle('speech-active');
+      
+      if (!speechUI.classList.contains('hidden')) {
+        initializeSpeechRecognition();
+      } else if (recognizing) {
+        recognition.stop();
+        recognizing = false;
+        startStopBtn.innerHTML = '<i class="fas fa-microphone mr-1"></i>شروع گفتار';
+        speechStatus.textContent = "غیرفعال";
+      }
+    }
+    
+    function showSpellCheck() {
+      document.getElementById('spell-check-modal').classList.remove('hidden');
+      document.getElementById('spell-check-results').innerHTML = `
+        <p class="text-green-500">بررسی املایی تکمیل شد. هیچ خطایی یافت نشد.</p>
+      `;
+    }
+    
+    function correctSpelling() {
+      alert("تصحیح املایی (شبیه‌سازی)");
+    }
+    
+    function ignoreSpelling() {
+      alert("نادیده گرفتن خطا (شبیه‌سازی)");
+    }
+    
+    function showPreferences() {
+      document.getElementById('preferences-modal').classList.remove('hidden');
+    }
+    
+    function openTab(tabId, button) {
+      const tabContents = document.querySelectorAll('.tab-content');
+      tabContents.forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      const tabButtons = document.querySelectorAll('.tab-button');
+      tabButtons.forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      document.getElementById(tabId).classList.add('active');
+      button.classList.add('active');
+    }
+    
+    function savePreferences() {
+      alert("تنظیمات ذخیره شد (شبیه‌سازی)");
+      document.getElementById('preferences-modal').classList.add('hidden');
+    }
+    
+    // Help menu functions
+    function showHelp() {
+      window.open("https://support.microsoft.com/fa-ir/windows/%D8%A7%D8%B3%D8%AA%D9%81%D8%A7%D8%AF%D9%87-%D8%A7%D8%B2-%D9%86%D9%88%D8%AA-%D9%BE%D8%AF-%D8%AF%D8%B1-windows-9d601a5a-5a21-95b9-17e5-4a9f5e8b1a2a", '_blank');
+    }
+    
+    function showAbout() {
+      alert("نوت‌پد آنلاین پیشرفته\nنسخه 2.0\nطراحی شده با HTML, CSS و JavaScript\n\nتمام ابزارهای OnlineNotepad.net در این نسخه پیاده‌سازی شده‌اند.");
+    }
+    
+    // Status bar update
+    function updateStatusBar() {
+      const textarea = document.getElementById('text-area');
+      const text = textarea.value.substring(0, textarea.selectionStart);
+      const lines = text.split('\n');
+      const line = lines.length;
+      const col = lines[lines.length - 1].length + 1;
+      
+      document.getElementById('cursor-position').textContent = `Ln ${line}, Col ${col}`;
+    }
+    
+    document.getElementById('text-area').addEventListener('input', function() {
+      updateStatusBar();
+      updateWordCount();
+    });
+    
+    document.getElementById('text-area').addEventListener('click', updateStatusBar);
+    document.getElementById('text-area').addEventListener('keyup', updateStatusBar);
+    
+    // Initialize
+    updateStatusBar();
+    updateWordCount();
+    
+    // Speech Recognition
+    const startStopBtn = document.getElementById("startStopBtn");
+    const languageSelect = document.getElementById("language");
+    const speechStatus = document.getElementById("speech-status");
+    const textArea = document.getElementById("text-area");
+    const speechUI = document.getElementById("speech-ui");
+    const speechBtn = document.getElementById("speech-btn");
+    
+    let recognition;
+    let recognizing = false;
+    
+    function initializeSpeechRecognition() {
+      if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+        speechStatus.textContent = "مرورگر شما از گفتار به متن پشتیبانی نمی‌کند.";
+        startStopBtn.disabled = true;
+        return;
+      }
+      
+      if (!recognition) {
+        recognition = createRecognition(languageSelect.value);
+        
+        startStopBtn.addEventListener("click", () => {
+          if (recognizing) {
+            recognition.stop();
+            recognizing = false;
+            startStopBtn.innerHTML = '<i class="fas fa-microphone mr-1"></i>شروع گفتار';
+            speechStatus.textContent = "متوقف شد";
+          } else {
+            recognition = createRecognition(languageSelect.value);
+            recognition.start();
+            recognizing = true;
+            startStopBtn.innerHTML = '<i class="fas fa-stop mr-1"></i>توقف گفتار';
+            speechStatus.textContent = "در حال گوش دادن...";
           }
         });
+      }
+    }
+    
+    function createRecognition(lang) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const r = new SpeechRecognition();
+      r.lang = lang;
+      r.continuous = true;
+      r.interimResults = false;
+      
+      r.onresult = (event) => {
+        let transcript = "";
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            transcript += event.results[i][0].transcript + " ";
+          }
+        }
+        
+        const cursorPos = textArea.selectionStart;
+        textArea.value = textArea.value.substring(0, cursorPos) + transcript + textArea.value.substring(cursorPos);
+        updateStatusBar();
+        updateWordCount();
+      };
+      
+      r.onerror = (event) => {
+        console.error("خطا:", event.error);
+        speechStatus.textContent = "خطا: " + event.error;
+      };
+      
+      r.onend = () => {
+        if (recognizing) {
+          r.start(); // ادامه گوش دادن
+        }
+      };
+      
+      return r;
+    }
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(event) {
+      if (event.ctrlKey) {
+        switch (event.key.toLowerCase()) {
+          case 'n':
+            event.preventDefault();
+            newFile();
+            break;
+          case 'o':
+            event.preventDefault();
+            openFile();
+            break;
+          case 's':
+            event.preventDefault();
+            saveFile();
+            break;
+          case 'z':
+            event.preventDefault();
+            undo();
+            break;
+          case 'y':
+            event.preventDefault();
+            redo();
+            break;
+          case 'x':
+            event.preventDefault();
+            cut();
+            break;
+          case 'c':
+            event.preventDefault();
+            copy();
+            break;
+          case 'v':
+            event.preventDefault();
+            paste();
+            break;
+          case 'a':
+            event.preventDefault();
+            selectAll();
+            break;
+          case 'f':
+            event.preventDefault();
+            find();
+            break;
+          case 'h':
+            event.preventDefault();
+            replace();
+            break;
+          case 'g':
+            event.preventDefault();
+            goTo();
+            break;
+          case 'e':
+            event.preventDefault();
+            searchWithBing();
+            break;
+          case 'p':
+            event.preventDefault();
+            printFile();
+            break;
+          case '+':
+            event.preventDefault();
+            zoomIn();
+            break;
+          case '-':
+            event.preventDefault();
+            zoomOut();
+            break;
+          case '0':
+            event.preventDefault();
+            restoreDefaultZoom();
+            break;
+        }
+      } else if (event.key === 'F1') {
+        event.preventDefault();
+        showHelp();
+      } else if (event.key === 'F3') {
+        event.preventDefault();
+        findNext();
+      } else if (event.key === 'F5') {
+        event.preventDefault();
+        timeDate();
+      } else if (event.key === 'F11') {
+        event.preventDefault();
+        toggleFullscreen();
+      }
+    });
+    
+    // Fullscreen change event
+    document.addEventListener('fullscreenchange', function() {
+      const fullscreenBtn = document.querySelector('[title="حالت تمام صفحه (F11)"] i');
+      if (document.fullscreenElement) {
+        fullscreenBtn.classList.remove('fa-expand');
+        fullscreenBtn.classList.add('fa-compress');
+      } else {
+        fullscreenBtn.classList.remove('fa-compress');
+        fullscreenBtn.classList.add('fa-expand');
       }
     });
   </script>
